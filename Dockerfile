@@ -24,14 +24,14 @@ RUN mkdir /opt/tomcat/webapps/activiti-rest && unzip /opt/activiti/wars/activiti
 RUN wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.38.tar.gz && tar -C /opt/tomcat/lib/ -xf mysql-connector-java-5.1.38.tar.gz mysql-connector-java-5.1.38/mysql-connector-java-5.1.38-bin.jar  --strip-components=1 && rm -rf mysql-connector-java-5.1.38.tar.gz
 
 #Disable demo user creation in Activiti and remove unwanted tomcat apps
-RUN sed -i 's/create.demo.users=true/create.demo.users=false/g;s/create.demo.definitions=true/create.demo.definitions=false/g;s/create.demo.models=true/create.demo.models=false/g;s/create.demo.reports=true/create.demo.reports=flase/g' /opt/tomcat/webapps/activiti-explorer/WEB-INF/classes/engine.properties
-RUN sed -i 's/create.demo.users=true/create.demo.users=false/g;s/create.demo.definitions=true/create.demo.definitions=false/g;s/create.demo.models=true/create.demo.models=false/g;s/create.demo.reports=true/create.demo.reports=flase/g' /opt/tomcat/webapps/activiti-rest/WEB-INF/classes/engine.properties
+#RUN sed -i 's/create.demo.users=true/create.demo.users=false/g;s/create.demo.definitions=true/create.demo.definitions=false/g;s/create.demo.models=true/create.demo.models=false/g;s/create.demo.reports=true/create.demo.reports=flase/g' /opt/tomcat/webapps/activiti-explorer/WEB-INF/classes/engine.properties
+#RUN sed -i 's/create.demo.users=true/create.demo.users=false/g;s/create.demo.definitions=true/create.demo.definitions=false/g;s/create.demo.models=true/create.demo.models=false/g;s/create.demo.reports=true/create.demo.reports=flase/g' /opt/tomcat/webapps/activiti-rest/WEB-INF/classes/engine.properties
 RUN rm -rf /opt/tomcat/webapps/examples
 RUN rm -rf /opt/tomcat/webapps/docs
 
 #Install MySQL Client Libraries
-RUN apt install --no-install-recommends -y mysql-client && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get install --no-install-recommends -y mysql-client && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ADD . ./
 #Start Activiti
-CMD [/start]
+CMD [/opt/start]

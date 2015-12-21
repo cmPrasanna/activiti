@@ -45,16 +45,16 @@ EOF
 #Create the db.properties
 cat <<EOF > /opt/tomcat/webapps/activiti-explorer/WEB-INF/classes/db.properties
 jdbc.driver=com.mysql.jdbc.Driver
-jdbc.url=jdbc:mysql://${ACTIVIT_DB_HOST}:3306/${ACTIVIT_DB_NAME}?autoReconnect=true&characterEncoding=utf8
-jdbc.username=${ACTIVIT_DB_USER}
-jdbc.password=${ACTIVIT_DB_PASSWORD}
+jdbc.url=jdbc:mysql://${ACTIVITI_DB_HOST}:3306/${ACTIVITI_DB_NAME}?autoReconnect=true&characterEncoding=utf8&useSSL=false
+jdbc.username=${ACTIVITI_DB_USER}
+jdbc.password=${ACTIVITI_DB_PASSWORD}
 db=mysql
 EOF
 cat <<EOF > /opt/tomcat/webapps/activiti-rest/WEB-INF/classes/db.properties
 jdbc.driver=com.mysql.jdbc.Driver
-jdbc.url=jdbc:mysql://${ACTIVIT_DB_HOST}:3306/${ACTIVIT_DB_NAME}?autoReconnect=true&characterEncoding=utf8
-jdbc.username=${ACTIVIT_DB_USER}
-jdbc.password=${ACTIVIT_DB_PASSWORD}
+jdbc.url=jdbc:mysql://${ACTIVITI_DB_HOST}:3306/${ACTIVITI_DB_NAME}?autoReconnect=true&characterEncoding=utf8&useSSL=false
+jdbc.username=${ACTIVITI_DB_USER}
+jdbc.password=${ACTIVITI_DB_PASSWORD}
 db=mysql
 EOF
 
@@ -69,15 +69,25 @@ TABLE_COUNT_COMMAND="SELECT COUNT(*) FROM information_schema.tables WHERE table_
 if [[ $(mysql -e "$TABLE_COUNT_COMMAND" | tail -1) -eq 0 ]]
 then
 printf "\nDatabase is empty, trying to create Activiti Tables\n\n"
-chmod +x /opt/tomcat/bin/catalina.sh
 /opt/tomcat/bin/catalina.sh start
-sleep 15
-/opt/tomcat/bin/catalina.sh stop
+sleep 25
+/opt/tomcat/bin/catalina.sh stop || pkill -9 java
 fi
 
 #Create Admin User for activiti
 printf "Creating Admin User for Activiti...\n"
-mysql -e "INSERT INTO ${ACTIVITI_DB_NAME}.ACT_ID_USER (ID_,REV_,FIRST_,LAST_,EMAIL_,PWD_,PICTURE_ID_)
-VALUES ('${ACTIVITI_DB_NAME}',${ACTIVITI_ADMIN_USER_REV},'${ACTIVITI_ADMIN_USER_FIRSTNAME}','${ACTIVITI_ADMIN_USER_LASTNAME}','${ACTIVITI_ADMIN_USER_EMAIL}','${ACTIVITI_ADMIN_USER_PASSWORD}',${ACTIVITI_ADMIN_USER_PICTUREID})"
+mysql -e "INSERT IGNORE INTO ${ACTIVITI_DB_NAME}.ACT_ID_USER (ID_,REV_,FIRST_,LAST_,EMAIL_,PWD_,PICTURE_ID_)
+VALUES ('${ACTIVITI_ADMIN_USER_ID}',${ACTIVITI_ADMIN_USER_REV},'${ACTIVITI_ADMIN_USER_FIRSTNAME}','${ACTIVITI_ADMIN_USER_LASTNAME}','${ACTIVITI_ADMIN_USER_EMAIL}','${ACTIVITI_ADMIN_USER_PASSWORD}',${ACTIVITI_ADMIN_USER_PICTUREID})"
+mysql -e "INSERT IGNORE INTO ${ACTIVITI_DB_NAME}.ACT_ID_MEMBERSHIP (USER_ID_,GROUP_ID_) VALUES ('${ACTIVITI_ADMIN_USER_ID}', 'admin');"
+
+
+mysql ${ACTIVITI_DB_NAME} -e "INSERT IGNORE INTO ${ACTIVITI_DB_NAME}.ACT_ID_MEMBERSHIP (USER_ID_,GROUP_ID_) VALUES ('${ACTIVITI_ADMIN_USER_ID}', 'admin');"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_MEMBERSHIP WHERE USER_ID_='kermit'"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_USER WHERE ID_='kermit'"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_MEMBERSHIP WHERE USER_ID_='gonzo'"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_USER WHERE ID_='gonzo'"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_MEMBERSHIP WHERE USER_ID_='fozzie'"
+mysql ${ACTIVITI_DB_NAME} -e "DELETE FROM ACT_ID_USER WHERE ID_='fozzie'"
 
 /opt/tomcat/bin/catalina.sh run
+
